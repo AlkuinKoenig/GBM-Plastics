@@ -11,10 +11,11 @@ import json
 #User input.
 ################################
 extended_meta = True #Set this to True if you want the used parameters repeated as metadata in the output file. Set to False otherwise.
-#output will be named automatically. 
+#output file will be named automatically. 
 
 input_fname = "PARS_BASE_20220321_1452" #without .json extension here. File must be found in /input folder.
-FRCS = boxmodel_forcings("base", 2015)# here the forcing functions (produced, waste, etc)
+scenario = ("base")
+#scenario = ("base",2025)
 
 t_span = np.array([1950,2016])#compute from t1 to t2
 #eval_times = np.arange(t_span[0], t_span[1], 0.01)#defining timesteps (for output only)
@@ -54,8 +55,8 @@ def boxmodel_V1(t, y, PARS, FRCS):
     P_waste = FRCS.get_P_waste(t)
     f_rec = FRCS.get_f_rec(t)
     f_inc = FRCS.get_f_incin(t)
-    f_disc = FRCS.get_f_disc(t)
-    #f_disc = 1 - f_rec - f_inc # maybe simply define discarded = 1 - recycled - incinerated?
+    #f_disc = FRCS.get_f_disc(t)
+    f_disc = 1 - f_rec - f_inc # maybe simply define discarded = 1 - recycled - incinerated?
 
     ####d dts
     dP_prod_tot_dt = P_prod
@@ -105,8 +106,9 @@ def boxmodel_V1(t, y, PARS, FRCS):
 with open("../../../input/" + input_fname + ".json","r") as myfile:
     PARS = json.load(myfile) #loading the input file
 
+FRCS = boxmodel_forcings(scenario)# here the forcing functions (produced, waste, etc)
+
 initial_cond = np.zeros(22)#initial conditions all in 0
-#eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*1+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
 
 print(f"Starting to compute box model from {t_span[0]} to {t_span[1]}...")
 start = timer()
@@ -160,16 +162,19 @@ current_time = now.strftime("%Y%m%d_%H%M")
 print("Current Time =", current_time)
 
 outdir = "../../../output/"
-fname = "OUTP_" + current_time + "_INP_" + input_fname + ".csv"
+fname = f"OUTP_{current_time}_TSPAN_{t_span[0]}-{t_span[1]}_SCEN_{scenario}_INP_{input_fname}.csv"
+#fname = "OUTP_" + current_time + "_Timespan_" + f"_INP_" + input_fname + ".csv"
 print(f"\nWriting output to file...{outdir+fname}")
-#df.to_csv(path_or_buf = outdir + fname)
 
 with open(outdir + fname, 'w', newline = "") as fout:
     if (extended_meta):
-        fout.write('Used parameters:\n')
+        fout.write(f"Timespan, {t_span[0]}-{t_span[1]}\n")
+        fout.write(f"Scenario, {';'.join(map(str, scenario))}\n")
+        fout.write("Used parameters below\n")
         for key, value in PARS.items():
             fout.write(f"{key}, {value}\n")
         fout.write("###############\n")
+        fout.write("Data below\n")
     df.to_csv(fout)
 
 print("\nDone.")

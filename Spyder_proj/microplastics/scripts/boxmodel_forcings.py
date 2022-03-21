@@ -3,24 +3,23 @@ import numpy as np
 #saving forcings (P use, P waste, etc) in a class as well
 class boxmodel_forcings():
     
-    def __init__(self, scenario = "base", stoptime = 999999):
+    def __init__(self, scenario = ("base")):
         self.scenario = scenario
-        self.stoptime = stoptime
         
     
     def get_P_prod(self,time):
         P_prod = np.where(time < 1950, 0, (0.1045809 * time ** 2 - 409.084300 * time + 400055.2))
         P_prod = P_prod * 8300/8007 # tweaking the function so that total produced form 1950 to 2015 (including) is 8300.
-        if (self.scenario == "fullstop"):
-            P_prod = np.where(time >= self.stoptime, 0, P_prod)
+        if (self.scenario[0] == "fullstop"):
+            P_prod = np.where(time >= self.scenario[1], 0, P_prod)
         
         return (P_prod)
 
     def get_P_waste(self,time):
         P_waste = np.where(time < 1950, 0,
                            0.000438727092 * time ** 3 - 2.52227209 * time ** 2 + 4831.80835 * time - 3084191.67)
-        if (self.scenario == "fullstop"):
-            P_waste = np.where(time >= self.stoptime, 0, P_waste)
+        if (self.scenario[0] == "fullstop"):
+            P_waste = np.where(time >= self.scenario[1], 0, P_waste)
         
         return (P_waste)
 
