@@ -1,6 +1,6 @@
 import numpy as np
 
-#saving forcings (P use, P waste, etc) in a class as well
+#saving forcings (P use, P waste, etc) in a class 
 class boxmodel_forcings():
     
     def __init__(self, scenario = ("base")):

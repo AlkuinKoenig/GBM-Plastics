@@ -164,7 +164,7 @@ print("Current Time =", current_time)
 outdir = "../../../output/"
 fname = f"OUTP_{current_time}_TSPAN_{t_span[0]}-{t_span[1]}_SCEN_{scenario}_INP_{input_fname}.csv"
 #fname = "OUTP_" + current_time + "_Timespan_" + f"_INP_" + input_fname + ".csv"
-print(f"\nWriting output to file...{outdir+fname}")
+print(f"\nWriting output to file...{outdir + fname}")
 
 with open(outdir + fname, 'w', newline = "") as fout:
     if (extended_meta):
