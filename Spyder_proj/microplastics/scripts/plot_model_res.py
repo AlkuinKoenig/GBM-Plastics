@@ -1,8 +1,9 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from boxmodel_parameters import boxmodel_parameters, boxmodel_forcings
 
-forcings = boxmodel_forcings("fullstop",2015)
-startstop = np.array([1950,2025])
+forcings = boxmodel_forcings("base",2015)
+startstop = np.array([1950,2015])
 P_prod = forcings.get_P_prod(np.linspace(startstop[0],
                                          startstop[1],
                                          (startstop[1]-startstop[0])+1))
@@ -21,27 +22,34 @@ for key in mykeys:
 t = soln.t #this is computed with the other script, boxmodel_V1.py. 
 #Run this first. Alternatively, copy this below "boxmodel_V1.py" and run it all.
 
-P_use = soln.y[0]
-P_disc = soln.y[1]
-MP_disc = soln.y[2]
-sMP_disc = soln.y[3]
+P_prod_tot = soln.y[0]
+P_waste_tot = soln.y[1]
+P_rec_tot = soln.y[2]
+P_inc_tot = soln.y[3]
+P_disc_tot = soln.y[4]
+MP_disc_tot = soln.y[5]
 
-P_SurfOce = soln.y[4]
-MP_SurfOce = soln.y[5]
-sMP_SurfOce = soln.y[6]
+P_use = soln.y[6]
+P_disc = soln.y[7]
+MP_disc = soln.y[8]
+sMP_disc = soln.y[9]
 
-MP_DeepOce = soln.y[7]
-sMP_DeepOce = soln.y[8]
+P_SurfOce = soln.y[10]
+MP_SurfOce = soln.y[11]
+sMP_SurfOce = soln.y[12]
 
-sMP_atm = soln.y[9]
-sMP_soil = soln.y[10]
+MP_DeepOce = soln.y[13]
+sMP_DeepOce = soln.y[14]
 
-P_beach = soln.y[11]
-MP_beach = soln.y[12]
-sMP_beach = soln.y[13]
+sMP_atm = soln.y[15]
+sMP_soil = soln.y[16]
 
-MP_sed = soln.y[14]
-sMP_sed = soln.y[15]
+P_beach = soln.y[17]
+MP_beach = soln.y[18]
+sMP_beach = soln.y[19]
+
+MP_sed = soln.y[20]
+sMP_sed = soln.y[21]
 
 print(f"Solver message: {soln.message}")
 print(P_use[-1])
@@ -100,8 +108,12 @@ plt.plot(t, MP_DeepOce , "-", label = "MP_DeepOce ")
 plt.legend()
 plt.show()
 
-control = sum(soln.y)
+control = sum(soln.y[6:21])
+print(len(control))
+print(f"\nAll plastics ever produced: {P_prod_tot[-1]}")
+print(f"\nAll plastics ever incinerated: {P_inc_tot[-1]}")
 print(f"\ncontrol at last year of computation: {control[-1]}")
+print(f"\nControl + all plastics ever incinerated (this should sum to \"ever produced\"): {control[-1]+P_inc_tot[-1]}")
 
 plt.plot(t,control, "-",label = "all compartments")
 plt.axvline(x=2015,color="red")

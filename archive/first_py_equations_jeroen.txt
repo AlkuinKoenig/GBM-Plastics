@@ -1,0 +1,18 @@
+
+##python differential equations before correction (from Jeroens original python script)
+
+    # dP_use_dt = P_prod + f_rec * P_waste - f_inc * P_waste - f_disc * P_waste
+    # dP_disc_dt = f_disc * P_waste*(1 - PARS.f_MP) - PARS.k_P_Disc_to_river * P_disc - PARS.k_Disc_P_to_MP * P_disc
+    # dMP_disc_dt = f_disc * P_waste*PARS.f_MP + PARS.k_Disc_P_to_MP * P_disc - PARS.k_MP_Disc_to_river * MP_disc - PARS.k_Disc_MP_to_sMP * MP_disc
+    # dsMP_disc_dt = PARS.k_Disc_MP_to_sMP * MP_disc - PARS.k_sMP_Disc_to_river * sMP_disc - PARS.k_Disc_sMP_to_atm * sMP_disc
+    # dP_SurfOce_dt = PARS.k_P_Disc_to_river * P_disc - PARS.k_SurfOce_P_beach * P_SurfOce
+    # dMP_SurfOce_dt = PARS.k_MP_Disc_to_river * MP_disc - PARS.k_SurfOce_MP_beach * MP_SurfOce - PARS.k_SurfOce_MP_CoastSed * MP_SurfOce * PARS.f_shelf - PARS.k_MP_surf_to_deep_oce * MP_SurfOce
+    # dsMP_SurfOce_dt = PARS.k_sMP_Disc_to_river * sMP_disc + PARS.k_sMP_atm_to_oce * sMP_atm + PARS.k_sMP_soil_to_oce * sMP_soil - PARS.k_sMP_oce_to_atm * sMP_SurfOce - PARS.k_SurfOce_sMP_CoastSed * sMP_SurfOce * PARS.f_shelf - PARS.k_sMP_surf_to_deep_oce * sMP_SurfOce
+    # dMP_DeepOce_dt = +PARS.k_MP_surf_to_deep_oce * MP_SurfOce * PARS.f_pelagic - PARS.k_DeepOce_MP_to_sMP * MP_DeepOce
+    # dsMP_DeepOce_dt = PARS.k_sMP_surf_to_deep_oce * sMP_SurfOce * PARS.f_pelagic + PARS.k_DeepOce_MP_to_sMP * MP_DeepOce
+    # dsMP_atm_dt = PARS.k_Disc_sMP_to_atm * sMP_disc + PARS.k_sMP_atm_to_oce * sMP_SurfOce - PARS.k_sMP_atm_to_soil * sMP_atm - PARS.k_sMP_atm_to_oce * sMP_atm
+    # dsMP_soil_dt = PARS.k_sMP_atm_to_soil * sMP_atm - PARS.k_sMP_soil_to_atm * sMP_soil - PARS.k_sMP_soil_to_oce * sMP_soil
+    # dP_beach_dt = PARS.k_SurfOce_P_beach * P_SurfOce
+    # dMP_beach_dt = PARS.k_SurfOce_MP_beach * MP_SurfOce
+    # dMP_sed_dt = PARS.k_SurfOce_MP_CoastSed * MP_SurfOce * PARS.f_shelf
+    # dsMP_sed_dt = PARS.k_SurfOce_sMP_CoastSed * sMP_SurfOce * PARS.f_shelf
