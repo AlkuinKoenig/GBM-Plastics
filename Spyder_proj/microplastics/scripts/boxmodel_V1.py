@@ -17,7 +17,8 @@ input_fname = "PARS_BASE_20220321_1452" #without .json extension here. File must
 FRCS = boxmodel_forcings("base", 2015)# here the forcing functions (produced, waste, etc)
 
 t_span = np.array([1950,2016])#compute from t1 to t2
-eval_times = np.arange(t_span[0], t_span[1], 0.1)#defining timesteps (for output only)
+#eval_times = np.arange(t_span[0], t_span[1], 0.01)#defining timesteps (for output only)
+eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*10+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
 
 ###############################
 #Defining the model

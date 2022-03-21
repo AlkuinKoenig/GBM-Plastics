@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from boxmodel_parameters import boxmodel_parameters, boxmodel_forcings
+from boxmodel_forcings import boxmodel_forcings
 
 forcings = boxmodel_forcings("base",2015)
 startstop = np.array([1950,2015])

@@ -10,6 +10,7 @@ class boxmodel_forcings():
     
     def get_P_prod(self,time):
         P_prod = np.where(time < 1950, 0, (0.1045809 * time ** 2 - 409.084300 * time + 400055.2))
+        P_prod = P_prod * 8300/8007 # tweaking the function so that total produced form 1950 to 2015 (including) is 8300.
         if (self.scenario == "fullstop"):
             P_prod = np.where(time >= self.stoptime, 0, P_prod)
         
