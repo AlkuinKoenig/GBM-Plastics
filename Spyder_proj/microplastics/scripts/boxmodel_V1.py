@@ -1,38 +1,27 @@
 import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
-from boxmodel_parameters import boxmodel_parameters, boxmodel_forcings
+from boxmodel_forcings import boxmodel_forcings
 from timeit import default_timer as timer
-
-#uncomment the following if you want to plot the curves for "P_produced, P_waste, P_recycled and P_incinerated
-# FRCS = boxmodel_forcings()
-# #def
-# t_span = np.array([1950,2050])
-# my_times = np.linspace(t_span[0], t_span[1], 10001)
-# my_prod = FRCS.get_P_prod(my_times)
-# my_waste = FRCS.get_P_waste(my_times)
-# my_f_disc = FRCS.get_f_disc(my_times)
-# my_f_incin = FRCS.get_f_incin(my_times)
-# my_f_rec = FRCS.get_f_rec(my_times)
-# my_f_disc_2 = np.ones(len(my_times))-my_f_incin - my_f_rec
-# my_control_1 =  my_f_disc + my_f_rec + my_f_incin #do these 3 sum 1?
-# my_control_2 = my_f_disc_2 + my_f_rec + my_f_incin #here they should sum 1 by definition
-# plt.plot(my_times,my_prod, "-", label="prod")
-# plt.plot(my_times,my_waste, "-", label="waste")
-# plt.legend()
-# plt.show()
-
-# plt.plot(my_times,my_f_disc, "-", label="f_disc")
-# plt.plot(my_times,my_f_disc_2, "-", label="f_disc_2")
-# plt.plot(my_times,my_f_incin, "-", label="f_incin")
-# plt.plot(my_times,my_f_rec, "-", label="f_rec")
-# plt.plot(my_times,my_control_1, "-.", label="control1")
-# plt.plot(my_times,my_control_2, "-.", label="control2")
-# plt.legend()
-# plt.show()
+from datetime import datetime
+import json
 
 
+###############################
+#User input.
+################################
+extended_meta = True #Set this to True if you want the used parameters repeated as metadata in the output file. Set to False otherwise.
+#output will be named automatically. 
+
+input_fname = "PARS_BASE_20220321_1452" #without .json extension here. File must be found in /input folder.
+FRCS = boxmodel_forcings("base", 2015)# here the forcing functions (produced, waste, etc)
+
+t_span = np.array([1950,2016])#compute from t1 to t2
+eval_times = np.arange(t_span[0], t_span[1], 0.1)#defining timesteps (for output only)
+
+###############################
+#Defining the model
+################################
 def boxmodel_V1(t, y, PARS, FRCS):
     #this is for control
     P_prod_tot = y[0]
@@ -72,31 +61,31 @@ def boxmodel_V1(t, y, PARS, FRCS):
     dP_waste_tot_dt = P_waste
     dP_rec_tot_dt = f_rec * P_waste
     dP_inc_tot_dt = f_inc * P_waste
-    dP_disc_tot_dt = f_disc * P_waste * (1 - PARS.f_MP)
-    dMP_disc_tot_dt = f_disc * P_waste * PARS.f_MP
+    dP_disc_tot_dt = f_disc * P_waste * (1 - PARS["f_MP"])
+    dMP_disc_tot_dt = f_disc * P_waste * PARS["f_MP"]
 
     #dP_use_dt = P_prod - f_inc * P_waste - f_disc * P_waste + f_rec * P_waste #I commented f_rec * P_waste, because I think recycled waste gets first removed from the used pool (because it becomes "waste"), then added again...so + recycled - recycled = 0 
     dP_use_dt = P_prod - P_waste + f_rec*P_waste #AK 16.03.2022 maybe this is more logical?
-    dP_disc_dt = f_disc * P_waste*(1 - PARS.f_MP) - PARS.k_P_Disc_to_river * P_disc - PARS.k_Disc_P_to_MP * P_disc
-    dMP_disc_dt = f_disc * P_waste*PARS.f_MP + PARS.k_Disc_P_to_MP * P_disc - PARS.k_MP_Disc_to_river * MP_disc - PARS.k_Disc_MP_to_sMP * MP_disc
-    dsMP_disc_dt = PARS.k_Disc_MP_to_sMP * MP_disc - PARS.k_sMP_Disc_to_river * sMP_disc - PARS.k_Disc_sMP_to_atm * sMP_disc
+    dP_disc_dt = f_disc * P_waste*(1 - PARS["f_MP"]) - PARS["k_P_Disc_to_river"] * P_disc - PARS["k_Disc_P_to_MP"] * P_disc
+    dMP_disc_dt = f_disc * P_waste*PARS["f_MP"] + PARS["k_Disc_P_to_MP"] * P_disc - PARS["k_MP_Disc_to_river"] * MP_disc - PARS["k_Disc_MP_to_sMP"] * MP_disc
+    dsMP_disc_dt = PARS["k_Disc_MP_to_sMP"] * MP_disc - PARS["k_sMP_Disc_to_river"] * sMP_disc - PARS["k_Disc_sMP_to_atm"] * sMP_disc
     
-    dP_SurfOce_dt = PARS.k_P_Disc_to_river * P_disc - PARS.k_SurfOce_P_beach * P_SurfOce - PARS.k_SurfOce_P_to_MP * P_SurfOce - PARS.k_P_surf_to_deep_oce *P_SurfOce#the last term is effectively 0 if all "large plastics" floats 
-    dMP_SurfOce_dt = PARS.k_MP_Disc_to_river * MP_disc + PARS.k_SurfOce_P_to_MP * P_SurfOce - PARS.k_SurfOce_MP_to_sMP * MP_SurfOce - PARS.k_SurfOce_MP_beach * MP_SurfOce - PARS.k_SurfOce_MP_CoastSed * MP_SurfOce * PARS.f_shelf - PARS.k_MP_surf_to_deep_oce * MP_SurfOce * PARS.f_pelagic
-    dsMP_SurfOce_dt = PARS.k_sMP_Disc_to_river * sMP_disc + PARS.k_SurfOce_MP_to_sMP * MP_SurfOce + PARS.k_sMP_atm_to_oce * sMP_atm + PARS.k_sMP_soil_to_oce * sMP_soil - PARS.k_sMP_oce_to_atm * sMP_SurfOce - PARS.k_SurfOce_sMP_CoastSed * sMP_SurfOce * PARS.f_shelf - PARS.k_sMP_surf_to_deep_oce * sMP_SurfOce * PARS.f_pelagic
+    dP_SurfOce_dt = PARS["k_P_Disc_to_river"] * P_disc - PARS["k_SurfOce_P_beach"] * P_SurfOce - PARS["k_SurfOce_P_to_MP"] * P_SurfOce - PARS["k_P_surf_to_deep_oce"] *P_SurfOce#the last term is effectively 0 if all "large plastics" floats 
+    dMP_SurfOce_dt = PARS["k_MP_Disc_to_river"] * MP_disc + PARS["k_SurfOce_P_to_MP"] * P_SurfOce - PARS["k_SurfOce_MP_to_sMP"] * MP_SurfOce - PARS["k_SurfOce_MP_beach"] * MP_SurfOce - PARS["k_SurfOce_MP_CoastSed"] * MP_SurfOce * PARS["f_shelf"] - PARS["k_MP_surf_to_deep_oce"] * MP_SurfOce * PARS["f_pelagic"]
+    dsMP_SurfOce_dt = PARS["k_sMP_Disc_to_river"] * sMP_disc + PARS["k_SurfOce_MP_to_sMP"] * MP_SurfOce + PARS["k_sMP_atm_to_oce"] * sMP_atm + PARS["k_sMP_soil_to_oce"] * sMP_soil - PARS["k_sMP_oce_to_atm"] * sMP_SurfOce - PARS["k_SurfOce_sMP_CoastSed"] * sMP_SurfOce * PARS["f_shelf"] - PARS["k_sMP_surf_to_deep_oce"] * sMP_SurfOce * PARS["f_pelagic"]
     
-    dMP_DeepOce_dt = +PARS.k_MP_surf_to_deep_oce * MP_SurfOce * PARS.f_pelagic - PARS.k_DeepOce_MP_to_sMP * MP_DeepOce
-    dsMP_DeepOce_dt = PARS.k_sMP_surf_to_deep_oce * sMP_SurfOce * PARS.f_pelagic + PARS.k_DeepOce_MP_to_sMP * MP_DeepOce
+    dMP_DeepOce_dt = +PARS["k_MP_surf_to_deep_oce"] * MP_SurfOce * PARS["f_pelagic"] - PARS["k_DeepOce_MP_to_sMP"] * MP_DeepOce
+    dsMP_DeepOce_dt = PARS["k_sMP_surf_to_deep_oce"] * sMP_SurfOce * PARS["f_pelagic"] + PARS["k_DeepOce_MP_to_sMP"] * MP_DeepOce
     
-    dsMP_atm_dt = PARS.k_Disc_sMP_to_atm * sMP_disc + PARS.k_sMP_oce_to_atm * sMP_SurfOce - PARS.k_sMP_atm_to_soil * sMP_atm - PARS.k_sMP_atm_to_oce * sMP_atm + PARS.k_sMP_soil_to_atm * sMP_soil
-    dsMP_soil_dt = PARS.k_sMP_atm_to_soil * sMP_atm - PARS.k_sMP_soil_to_atm * sMP_soil - PARS.k_sMP_soil_to_oce * sMP_soil
+    dsMP_atm_dt = PARS["k_Disc_sMP_to_atm"] * sMP_disc + PARS["k_sMP_oce_to_atm"] * sMP_SurfOce - PARS["k_sMP_atm_to_soil"] * sMP_atm - PARS["k_sMP_atm_to_oce"] * sMP_atm + PARS["k_sMP_soil_to_atm"] * sMP_soil
+    dsMP_soil_dt = PARS["k_sMP_atm_to_soil"] * sMP_atm - PARS["k_sMP_soil_to_atm"] * sMP_soil - PARS["k_sMP_soil_to_oce"] * sMP_soil
     
-    dP_beach_dt = PARS.k_SurfOce_P_beach * P_SurfOce - PARS.k_beach_P_to_MP * P_beach
-    dMP_beach_dt = PARS.k_SurfOce_MP_beach * MP_SurfOce + PARS.k_beach_P_to_MP * P_beach - PARS.k_beach_MP_to_sMP * MP_beach
-    dsMP_beach_dt = + PARS.k_beach_MP_to_sMP * MP_beach
+    dP_beach_dt = PARS["k_SurfOce_P_beach"] * P_SurfOce - PARS["k_beach_P_to_MP"] * P_beach
+    dMP_beach_dt = PARS["k_SurfOce_MP_beach"] * MP_SurfOce + PARS["k_beach_P_to_MP"] * P_beach - PARS["k_beach_MP_to_sMP"] * MP_beach
+    dsMP_beach_dt = + PARS["k_beach_MP_to_sMP"] * MP_beach
     
-    dMP_sed_dt = PARS.k_SurfOce_MP_CoastSed * MP_SurfOce * PARS.f_shelf
-    dsMP_sed_dt = PARS.k_SurfOce_sMP_CoastSed * sMP_SurfOce * PARS.f_shelf
+    dMP_sed_dt = PARS["k_SurfOce_MP_CoastSed"] * MP_SurfOce * PARS["f_shelf"]
+    dsMP_sed_dt = PARS["k_SurfOce_sMP_CoastSed"] * sMP_SurfOce * PARS["f_shelf"]
 
     return(np.array([dP_prod_tot_dt, dP_waste_tot_dt, 
                      dP_rec_tot_dt, dP_inc_tot_dt,
@@ -109,21 +98,17 @@ def boxmodel_V1(t, y, PARS, FRCS):
                      dMP_sed_dt, dsMP_sed_dt]))
 
 
+###############################
+#running the model
 ################################
+with open("../../../input/" + input_fname + ".json","r") as myfile:
+    PARS = json.load(myfile) #loading the input file
 
 initial_cond = np.zeros(22)#initial conditions all in 0
-t_span = np.array([1950,2016])
-eval_times = np.arange(t_span[0],t_span[1],0.1)
-
 #eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*1+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
-
-
-
 
 print(f"Starting to compute box model from {t_span[0]} to {t_span[1]}...")
 start = timer()
-PARS = boxmodel_parameters() # here all the k values and functions are stored
-FRCS = boxmodel_forcings("base", 2015)# here the forcing functions (produced, waste, etc)
 
 soln = solve_ivp(fun=lambda t, y: boxmodel_V1(t, y, PARS, FRCS), 
                  t_span = t_span, y0 = initial_cond, t_eval = eval_times,
@@ -132,5 +117,58 @@ end = timer()
 print(f"Finished. This took: {end-start} seconds. Results saved in the variable \"soln\"")
 
 
-print("\nWriting to file...")
+###############################
+#Writing model output
+################################
+data_out = {      
+    "Year" : soln.t,
+    "P_prod_tot" : soln.y[0],
+    "P_waste_tot" : soln.y[1],
+    "P_rec_tot" : soln.y[2],
+    "P_inc_tot" : soln.y[3],
+    "P_disc_tot" : soln.y[4],
+    "MP_disc_tot" : soln.y[5],
+    
+    "P_use" : soln.y[6],
+    "P_disc" : soln.y[7],
+    "MP_disc" : soln.y[8],
+    "sMP_disc" : soln.y[9],
+    
+    "P_SurfOce" : soln.y[10],
+    "MP_SurfOce" : soln.y[11],
+    "sMP_SurfOce" : soln.y[12],
+    
+    "MP_DeepOce" : soln.y[13],
+    "sMP_DeepOce" : soln.y[14],
+    
+    "sMP_atm" : soln.y[15],
+    "sMP_soil" : soln.y[16],
+    
+    "P_beach" : soln.y[17],
+    "MP_beach" : soln.y[18],
+    "sMP_beach" : soln.y[19],
+    
+    "MP_sed" : soln.y[20],
+    "sMP_sed" : soln.y[21]
+}
+df = pd.DataFrame(data_out)
 
+#creating a timestamp so that we can keep track of the outputs
+now = datetime.now()
+current_time = now.strftime("%Y%m%d_%H%M")
+print("Current Time =", current_time)
+
+outdir = "../../../output/"
+fname = "OUTP_" + current_time + "_INP_" + input_fname + ".csv"
+print(f"\nWriting output to file...{outdir+fname}")
+#df.to_csv(path_or_buf = outdir + fname)
+
+with open(outdir + fname, 'w', newline = "") as fout:
+    if (extended_meta):
+        fout.write('Used parameters:\n')
+        for key, value in PARS.items():
+            fout.write(f"{key}, {value}\n")
+        fout.write("###############\n")
+    df.to_csv(fout)
+
+print("\nDone.")
