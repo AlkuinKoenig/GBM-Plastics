@@ -176,16 +176,19 @@ current_time = now.strftime("%Y%m%d_%H%M")
 print("Current Time =", current_time)
 
 outdir = "../../../output/"
-fname = "OUTP_V2_" + current_time + "_INP_" + input_fname + ".csv"
-print(f"\nWriting output to file...{outdir+fname}")
-#df.to_csv(path_or_buf = outdir + fname)
+fname = f"OUTP_{current_time}_TSPAN_{t_span[0]}-{t_span[1]}_SCEN_{scenario}_INP_{input_fname}.csv"
+#fname = "OUTP_" + current_time + "_Timespan_" + f"_INP_" + input_fname + ".csv"
+print(f"\nWriting output to file...{outdir + fname}")
 
 with open(outdir + fname, 'w', newline = "") as fout:
     if (extended_meta):
-        fout.write('Used parameters:\n')
+        fout.write(f"Timespan, {t_span[0]}-{t_span[1]}\n")
+        fout.write(f"Scenario, {';'.join(map(str, scenario))}\n")
+        fout.write("Used parameters below\n")
         for key, value in PARS.items():
             fout.write(f"{key}, {value}\n")
         fout.write("###############\n")
+        fout.write("Data below\n")
     df.to_csv(fout)
 
 print("\nDone.")
