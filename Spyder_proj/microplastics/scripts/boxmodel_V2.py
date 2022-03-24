@@ -15,10 +15,10 @@ extended_meta = True #Set this to True if you want the used parameters repeated 
 #output file will be named automatically. 
 
 input_fname = "PARS_BASE_V2_20220322_1739" #without .json extension here. File must be found in /input folder.
-scenario = ("base")
+scenario = ("fullstop",2025)
 #scenario = ("base",2025)
 
-t_span = np.array([1950,2016])#compute from t1 to t2
+t_span = np.array([1950,2100])#compute from t1 to t2
 #eval_times = np.arange(t_span[0], t_span[1], 0.01)#defining timesteps (for output only)
 eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*10+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
 

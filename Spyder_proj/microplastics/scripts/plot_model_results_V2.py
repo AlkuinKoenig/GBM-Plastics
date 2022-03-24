@@ -6,7 +6,7 @@ import pandas as pd
 
 fpath = "../../../output/"
 #insert the output file name here
-fname = "OUTP_20220323_1126_TSPAN_1950-2016_SCEN_base_INP_PARS_BASE_V2_20220322_1739.csv"
+fname = "OUTP_20220324_1315_TSPAN_1950-2100_SCEN_('fullstop', 2025)_INP_PARS_BASE_V2_20220322_1739.csv"
 
 #################
 
