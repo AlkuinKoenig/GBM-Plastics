@@ -190,7 +190,7 @@ data_out = {
     "MP_DeepSed" : soln.y[23],
     "sMP_DeepSed" : soln.y[24],
     
-    ###ADD FLUXES
+    ###ADDING FLUXES
     ###finally, you have to add them to the output with an adequate name and with the right index.
     "F_atm_to_soil" : soln.y[25]
     
