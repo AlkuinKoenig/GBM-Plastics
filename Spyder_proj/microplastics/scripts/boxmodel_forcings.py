@@ -43,7 +43,7 @@ class boxmodel_forcings():
         f_rec = np.where(time < 1989, 0, 0.00712723 * time - 14.1653)  # before 1989=0; since 1989 use equation
         return (f_rec)
 
-# FRCS = boxmodel_forcings(("base"))
+#FRCS = boxmodel_forcings(('base'))
 
 # print(FRCS.get_P_prod(2000))
 # # print(FRCS.get_f_incin(1981))
