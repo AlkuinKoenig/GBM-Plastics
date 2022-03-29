@@ -21,9 +21,9 @@ mout["control"]  = mout[["P_use","P_disc","MP_disc",
                "MP_DeepSed","sMP_DeepSed"]].sum(axis=1)
 
 
-#calculating the flux at year t by subracting total flux at year t from total flux at year t+1.
+#calculating the flux at year t by subtracting total flux at year (t-1) from total flux at year (t).
 #here the method "shift" comes in handy.
-steps_per_year = 10#in how many timesteps has a year been cut in the output data? This must be known.
+steps_per_year = 10 #in how many timesteps has a year been cut in the output data? This must be known.
 mout["F_atm_to_soil_flux"] = mout["F_atm_to_soil"] - mout["F_atm_to_soil"].shift(steps_per_year)
 
 
