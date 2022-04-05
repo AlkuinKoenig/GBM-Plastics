@@ -22,7 +22,7 @@ scenario = ("pulse",0,1000) #a pulse at year "0" of 1000 tons of P
 #examples:
 #scenario = ("base") #business as usual
 #scenario = ("fullstop",2025) #stop all virgin plastics production and all plastics waste on the 01.01.2025.
-#scenario = ("pulse", 0, 1000) #waste and immediately discard a 1-year pulse of a total of 1000 tons of P at year "0".
+#scenario = ("pulse", 0, 1000) #waste and immediately discard a 1-year pulse of a total of 1000 tons of plastics (P and MP with the defined fractionation in waste) at year "0".
 
 t_span = np.array([0,1000])#The model will be run from from t1 to t2 (given in years)
 #eval_times = np.arange(t_span[0], t_span[1], 0.01)#defining timesteps (for output only)
