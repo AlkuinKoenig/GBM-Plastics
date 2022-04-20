@@ -6,11 +6,11 @@ import pandas as pd
 
 fpath = "../../../output/"
 #insert the output file name here
-fname = "OUTP_20220404_1527_INP_PARS_BASE_V2_20220322_1739.csv"
+fname = "OUTP_20220420_1129_INP_PARS_BASE_V2_20220322_1739.csv"
 
 #################
 
-mout = pd.read_csv(fpath + fname, skiprows = 60)
+mout = pd.read_csv(fpath + fname, skiprows = 61)
 
 print(f"Available data columns: {mout.columns}")
 
