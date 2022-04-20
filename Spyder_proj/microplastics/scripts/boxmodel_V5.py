@@ -15,27 +15,31 @@ extended_meta = True #Set this to True if you want the used parameters repeated 
 #The output file will be named automatically. 
 
 input_fname = "PARS_BASE_V2_20220322_1739" #this is the input file with all the k-values for the model run. The name must be given without .json extension here. The .json file must be found in /input folder.
-#scenario_release = ("fullstop",2025) #this is the scenario_release to run. Currently implemented: ("base") and ("fullstop", stopyear), with "stopyear" the year where all production and waste production is set to 0
-scenario_release = ("fullstop",2025) #a pulse at year "0" of 1000 tons of P
+scenario_release = ("fullstop",2025) #this is the scenario_release to run. Currently implemented: ("base") and ("fullstop", stopyear), with "stopyear" the year where all production and waste production is set to 0
 
-scenario_cleanup = ("no_cleanup", 2025, np.array([0.03,0.02,0.01])) 
+#cenario_cleanup = ("no_cleanup",) 
+#scenario_cleanup = ("cleanup_discarded_fixedfrac", 2025, np.array([0.03,0.02,0.01]))#start cleaning up 3% of the discarded pool of P, 2% of MP and 1% of sMP every year
+scenario_cleanup = ("cleanup_discarded_linear_increment", np.array([2025,2050]), np.array([0.1,0.05,0.025]))#lineally ramping up cleanup from 2025 to 2050 to 10% of P, 5% of MP and 2.5% of sMP by 2050. Then maintain this ratio.
 
 
-#examples:
-#scenario_release = ("base") #business as usual
+########
+#more examples:
+#scenario_release = ("base",) #business as usual
 #scenario_release = ("fullstop",2025) #stop all virgin plastics production and all plastics waste on the 01.01.2025.
 #scenario_release = ("pulse", 0, 1000) #waste and immediately discard a 1-year pulse of a total of 1000 tons of plastics (P and MP with the defined fractionation in waste) at year "0".
 
 #scenario_cleanup = ("no_cleanup",) #do no cleanup of reservoirs
-
 #scenario_cleanup = ("cleanup_discarded_fixedfrac", 2025, np.array([0.03,0.02,0.01]))#start cleaning up 3% of the discarded pool of P, 2% of MP and 1% of sMP every year
+#scenario_cleanup = ("cleanup_discarded_linear_increment", np.array([2025,2050]), np.array([0.1,0.05,0.025]))#lineally ramping up cleanup from 2025 to 2050 to 10% of P, 5% of MP and 2.5% of sMP by 2050. Then maintain this ratio.
+#######
+#######
+
+
 
 
 t_span = np.array([1950,2300])#The model will be run from from t1 to t2 (given in years)
 #eval_times = np.arange(t_span[0], t_span[1], 0.01)#defining timesteps (for output only)
 eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*10+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
-
-
 
 
 ###############################
@@ -249,7 +253,10 @@ df["F_P_disc_to_cleanUp"] = df["P_disc"] * FRCS.get_f_cleanUp(df["Year"])[0]
 df["F_MP_disc_to_cleanUp"] = df["MP_disc"] * FRCS.get_f_cleanUp(df["Year"])[1]
 df["F_sMP_disc_to_cleanUp"] = df["sMP_disc"] * FRCS.get_f_cleanUp(df["Year"])[2]
 
-
+df["DIVERSE_AFTER"] = df["P_disc"] * np.nan #empty separating column for convenience
+df["frac_P_cleanup"] = FRCS.get_f_cleanUp(df["Year"])[0]
+df["frac_MP_cleanup"] = FRCS.get_f_cleanUp(df["Year"])[1]
+df["frac_sMP_cleanup"] = FRCS.get_f_cleanUp(df["Year"])[2]
 
 #creating a timestamp so that we can keep track of the outputs
 now = datetime.now()

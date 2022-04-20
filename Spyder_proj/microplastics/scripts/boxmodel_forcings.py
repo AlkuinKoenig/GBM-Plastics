@@ -10,7 +10,8 @@ class boxmodel_forcings():
             raise Exception("Error. Undefined release scenario. Be sure to initiate your 'forcings' class with a valid release scenario! Typo?")
         
         self.scenario_cleanup = scenario_cleanup
-        if not self.scenario_cleanup[0] in ["no_cleanup","cleanup_discarded_fixedfrac"]:
+        if not self.scenario_cleanup[0] in ["no_cleanup","cleanup_discarded_fixedfrac",
+                                            "cleanup_discarded_linear_increment"]:
             raise Exception("Error. Undefined cleanup scenario. Be sure to initiate your 'forcings' class with a valid cleanup scenario! Typo?")
         
         
@@ -78,11 +79,30 @@ class boxmodel_forcings():
             f_P_cleanUp = np.where(time >= self.scenario_cleanup[1], self.scenario_cleanup[2][0], 0)
             f_MP_cleanUp = np.where(time >= self.scenario_cleanup[1], self.scenario_cleanup[2][1], 0)
             f_sMP_cleanUp = np.where(time >= self.scenario_cleanup[1], self.scenario_cleanup[2][2], 0)
+            
+        if (self.scenario_cleanup[0] == "cleanup_discarded_linear_increment"):
+            t_ini = self.scenario_cleanup[1][0]#when the increment starts
+            slope = self.scenario_cleanup[2]/(self.scenario_cleanup[1][1] - self.scenario_cleanup[1][0])
+            
+            f_P_cleanUp = np.where(time <  self.scenario_cleanup[1][0],  0 ,
+                                   np.where(time < self.scenario_cleanup[1][1], (time - t_ini)*slope[0],
+                                            self.scenario_cleanup[2][0]))
+            
+            f_MP_cleanUp = np.where(time <  self.scenario_cleanup[1][0],  0 ,
+                                   np.where(time < self.scenario_cleanup[1][1], (time - t_ini)*slope[1],
+                                            self.scenario_cleanup[2][1]))
+            
+            f_sMP_cleanUp = np.where(time <  self.scenario_cleanup[1][0],  0 ,
+                                   np.where(time < self.scenario_cleanup[1][1], (time - t_ini)*slope[2],
+                                            self.scenario_cleanup[2][2]))
+                                 
+            
         
         return (np.array([f_P_cleanUp, f_MP_cleanUp, f_sMP_cleanUp]))
     
     
-    
+
+
 
 #FRCS = boxmodel_forcings(("base",),("no_cleanup",))
 
