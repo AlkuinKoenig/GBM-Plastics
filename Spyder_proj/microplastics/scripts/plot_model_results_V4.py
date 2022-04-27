@@ -6,7 +6,7 @@ import pandas as pd
 
 fpath = "../../../output/"
 #insert the output file name here
-fname = "OUTP_20220420_1658_INP_PARS_BASE_V2_20220322_1739_CU_static.csv"
+fname = "OUTP_20220427_2018_INP_PARS_BASE_V2_20220322_1739.csv"
 
 #################
 
@@ -91,6 +91,31 @@ plt.ylabel("mass [tonnes]")
 plt.legend()
 plt.show()
 
+plt.plot(mout["Year"],mout["F_P_disc"], "-",label = "F_discarded")
+plt.plot(mout["Year"],mout["F_P_incin"], "-",label = "F_incin")
+plt.plot(mout["Year"],mout["F_P_rec"], "-",label = "F_rec")
+#plt.axvline(x=2015,color="red")
+plt.xlabel("year")
+plt.ylabel("mass [tonnes]")
+plt.legend()
+plt.show()
+
+plt.plot(mout["Year"],mout["f_rec"], "-",label = "f_rec")
+plt.plot(mout["Year"],mout["f_incin"], "-",label = "f_incin")
+plt.plot(mout["Year"],mout["f_disc"], "-",label = "f_disc")
+#plt.axvline(x=2015,color="red")
+plt.xlabel("year")
+plt.ylabel("mass [tonnes]")
+plt.legend()
+plt.show()
+
+plt.plot(mout["Year"],mout["F_P_produced"], "-",label = "produced P")
+plt.plot(mout["Year"],mout["F_P_waste"], "-",label = "wasted P")
+#plt.axvline(x=2015,color="red")
+plt.xlabel("year")
+plt.ylabel("mass [tonnes]")
+plt.legend()
+plt.show()
 
 
 
