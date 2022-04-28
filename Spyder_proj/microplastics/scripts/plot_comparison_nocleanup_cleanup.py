@@ -3,22 +3,25 @@ import matplotlib.pyplot as plt
 import pandas as pd
 #import plotnine
 
+#Example script on plotting a cleanup scenario vs. a non-cleanup scenario
+
 #################
 
+#below give the relative path to the output files
 fpath = "../../../output/"
-#insert the output file name here
+#insert the output file name here. Vaiable names should be self-explanatory
 fname_nocleanup = "OUTP_20220420_1703_INP_PARS_BASE_V2_20220322_1739_no_CU.csv"
 fname_cleanup = "OUTP_20220420_1658_INP_PARS_BASE_V2_20220322_1739_CU_static.csv"
 
 
 #################
-
+#importing data, skipping the metadata lines
 df_metadata = pd.read_csv(fpath + fname_nocleanup, header = None, error_bad_lines = False, warn_bad_lines=False)
 mout_noCU = pd.read_csv(fpath + fname_nocleanup, skiprows = len(df_metadata.index))#skip all metadata lines
 
 df_metadata = pd.read_csv(fpath + fname_nocleanup, header = None, error_bad_lines = False, warn_bad_lines=False)
 mout_CU = pd.read_csv(fpath + fname_cleanup, skiprows = len(df_metadata.index))#skip all metadata lines
-
+###
 
 print(f"Available data columns: {mout_noCU.columns}")
 
@@ -44,9 +47,6 @@ plt.ylabel("mass [tonnes]")
 plt.title("cleanup")
 plt.legend(loc=(1.04,0))
 plt.show()
-
-
-
 
 
 

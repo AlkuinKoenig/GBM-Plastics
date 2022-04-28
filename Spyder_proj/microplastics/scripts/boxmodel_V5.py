@@ -1,36 +1,55 @@
 import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
-from boxmodel_forcings import boxmodel_forcings
+from boxmodel_forcings import boxmodel_forcings #this is custom. Make sure to have the script boxmodel_forcings.py in the same folder
 from timeit import default_timer as timer
 from datetime import datetime
 import json
 
-
+##############################
+#Microplastics box model.
+##############################
+#Instructions:
+#This is the main script (boxmodel_VX.py).To be able to run this, you need to have in the same folder
+#the script "boxmodel_forcings.py", where forcings are defined.
+#you also need a *.json input file with rate constants (for example created with the script "boxmodel_parameters_VX.py", where X is a version number)
+#The variable "input_relpath" below should point to the location of this input *.json
+#Note that the output file will be named automatically. It will be saved at the path "output_relpath" which should be given below.
 
 ###############################
 #User input.
-################################
-extended_meta = True #Set this to True if you want the used parameters repeated as metadata in the output file (recommended). Set to False otherwise.
-#The output file will be named automatically. 
+###############################
+#below indicate the input file with all the k-values for the model run. The name must be given without .json extension here. 
+input_fname = "PARS_BASE_V2_20220322_1739" 
+#below indicate the relative path to the input file. 
+input_relpath = "../../../input/"
+#below indicate the relative path to where you want the output file to be saved
+output_relpath = "../../../output/"
 
-input_fname = "PARS_BASE_V2_20220322_1739" #this is the input file with all the k-values for the model run. The name must be given without .json extension here. The .json file must be found in /input folder.
-scenario_release = ("SCS",) #this is the scenario_release to run (see examples below). 
+#below indicate the time span for which the model should be run (t1 to t2, given in years)
+t_span = np.array([1950,2050])
+#below indicate how many output lines you want to have per year (for example 10 --> output every 0.1 years)
+lines_per_year = 10
 
 
+#set below to True if you want the used parameters (rate constants) repeated as metadata in the output file (recommended). Set to False otherwise. 
+extended_meta = True 
+
+#below indicate the release scenario (see examples further below). 
+scenario_release = ("SCS",) 
+
+#below indicate the cleanup scenario (cleanup referrs to removing P, MP or sMP from the discarded plastics pool)
 scenario_cleanup = ("no_cleanup",) 
-#scenario_cleanup = ("cleanup_discarded_fixedfrac", 2025, np.array([0.03,0.02,0.01]))#start cleaning up 3% of the discarded pool of P, 2% of MP and 1% of sMP every year
-#scenario_cleanup = ("cleanup_discarded_linear_increment", np.array([2025,2050]), np.array([0.1,0.05,0.025]))#lineally ramping up cleanup from 2025 to 2050 to 10% of P, 5% of MP and 2.5% of sMP by 2050. Then maintain this ratio.
-
 
 ########
-#more examples:
+#EXAMPLES FOR RELEASE AND CLEANUP SCENARIOS BELOW
+########
 #scenario_release = ("base",) #business as usual
 #scenario_release = ("SCS",) #system change
 #scenario_release = ("fullstop",2025) #stop all virgin plastics production and all plastics waste on the 01.01.2025.
 #scenario_release = ("pulse", 0, 1000) #waste and immediately discard a 1-year pulse of a total of 1000 tons of plastics (P and MP with the defined fractionation in waste) at year "0".
 
-#scenario_cleanup = ("no_cleanup",) #do no cleanup of reservoirs
+#scenario_cleanup = ("no_cleanup",) #do no cleanup of reservoirs. Default.
 #scenario_cleanup = ("cleanup_discarded_fixedfrac", 2025, np.array([0.03,0.02,0.01]))#start cleaning up 3% of the discarded pool of P, 2% of MP and 1% of sMP every year
 #scenario_cleanup = ("cleanup_discarded_linear_increment", np.array([2025,2050]), np.array([0.1,0.05,0.025]))#lineally ramping up cleanup from 2025 to 2050 to 10% of P, 5% of MP and 2.5% of sMP by 2050. Then maintain this ratio.
 #######
@@ -38,15 +57,9 @@ scenario_cleanup = ("no_cleanup",)
 
 
 
-
-t_span = np.array([1950,2050])#The model will be run from from t1 to t2 (given in years)
-#eval_times = np.arange(t_span[0], t_span[1], 0.01)#defining timesteps (for output only)
-eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*10+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
-
-
 ###############################
-#Defining the model
-################################
+#Below the definition of the model, alongisde all differential equations
+###############################
 def boxmodel_V1(t, y, PARS, FRCS):
     #this is for control
     P_prod_tot = y[0]
@@ -81,15 +94,15 @@ def boxmodel_V1(t, y, PARS, FRCS):
     sMP_cleanUp = y[27]
     
     
-    #now starting to calculate. First we get the forcings (P produced, P wasted, recycled fraction, incinerated fraction)
+    #First we get the forcings (P produced, P wasted, recycled fraction, incinerated fraction)
     P_prod = FRCS.get_P_prod(t)
     P_waste = FRCS.get_P_waste(t)
     f_rec = FRCS.get_f_rec(t)
     f_inc = FRCS.get_f_incin(t)
-    #f_disc = FRCS.get_f_disc(t) 
+    #f_disc = FRCS.get_f_disc(t) #note that we use f_disc = 1 - f_incin - f_rec
     f_disc = 1 - f_rec - f_inc # As P_recycled + P_incinerated + P_discarded = 1
    
-    #getting the cleanup
+    #getting the cleanup dts
     cleanup = FRCS.get_f_cleanUp(t)
     dP_cleanUp = cleanup[0] * P_disc
     dMP_cleanUp = cleanup[1] * MP_disc
@@ -103,8 +116,7 @@ def boxmodel_V1(t, y, PARS, FRCS):
     dP_disc_tot_dt = f_disc * P_waste * (1 - PARS["f_MP"])
     dMP_disc_tot_dt = f_disc * P_waste * PARS["f_MP"]
 
-    #dP_use_dt = P_prod - f_inc * P_waste - f_disc * P_waste #+ f_rec * P_waste #I commented f_rec * P_waste, because I think recycled waste gets first removed from the used pool (because it becomes "waste"), then added again...so + recycled - recycled = 0 
-    dP_use_dt = P_prod - P_waste + f_rec*P_waste #AK 16.03.2022 maybe this is more logical?
+    dP_use_dt = P_prod - P_waste + f_rec*P_waste 
     
     dP_disc_dt = f_disc * P_waste * (1 - PARS["f_MP"]) - PARS["k_P_Disc_to_river"] * P_disc - PARS["k_Disc_P_to_MP"] * P_disc - dP_cleanUp
     dMP_disc_dt = f_disc * P_waste * PARS["f_MP"] + PARS["k_Disc_P_to_MP"] * P_disc - PARS["k_MP_Disc_to_river"] * MP_disc - PARS["k_Disc_MP_to_sMP"] * MP_disc - dMP_cleanUp
@@ -131,7 +143,6 @@ def boxmodel_V1(t, y, PARS, FRCS):
     dsMP_DeepSed_dt = PARS["k_DeepOce_sMP_DeepSed"] * sMP_DeepOce
 
 
-
     return(np.array([dP_prod_tot_dt, dP_waste_tot_dt, 
                      dP_rec_tot_dt, dP_inc_tot_dt,
                      dP_disc_tot_dt, dMP_disc_tot_dt,
@@ -146,17 +157,17 @@ def boxmodel_V1(t, y, PARS, FRCS):
                      ]))
 
 
-###############################
+################################
 #running the model
 ################################
-with open("../../../input/" + input_fname + ".json","r") as myfile:
+with open(input_relpath + input_fname + ".json","r") as myfile:
     PARS = json.load(myfile) #loading the input file
 
 FRCS = boxmodel_forcings(scenario_release, scenario_cleanup)# here the forcing functions (produced, waste, etc). Note that this class was imported from "boxmodel_forcings.py", which must be in the same folder.
 
+eval_times = np.linspace(t_span[0],t_span[1],(t_span[1]-t_span[0])*lines_per_year+1)#time where we want this to be evaluated (note that the ODE solver determines the correct time step for calculation automatically, this is just for output)
 
-#initial_cond = np.zeros(25)#initial conditions all in 0
-initial_cond = np.zeros(28)#initial conditions all in 0
+initial_cond = np.zeros(28)#set all initial conditions to 0
 
 
 print(f"Starting to compute box model from {t_span[0]} to {t_span[1]}...")
@@ -171,7 +182,7 @@ print(f"Finished. This took: {end-start} seconds. Results saved in the variable 
 
 ###############################
 #Writing model output
-################################
+###############################
 data_out = {      
     "Year" : soln.t,
     "P_prod_tot" : soln.y[0],
@@ -268,13 +279,13 @@ now = datetime.now()
 current_time = now.strftime("%Y%m%d_%H%M")
 print("Current Time =", current_time)
 
-outdir = "../../../output/"
+#automatically created output file name
 fname = f"OUTP_{current_time}_INP_{input_fname}.csv"
 
-print(f"\nWriting output to file...{outdir + fname}")
+print(f"\nWriting output to file...{output_relpath + fname}")
 
 #writing the output as .csv
-with open(outdir + fname, 'w', newline = "") as fout:
+with open(output_relpath + fname, 'w', newline = "") as fout:
     if (extended_meta):
         fout.write(f"Timespan, {t_span[0]}-{t_span[1]}\n")
         fout.write(f"scenario_release, {';'.join(map(str, scenario_release))}\n")

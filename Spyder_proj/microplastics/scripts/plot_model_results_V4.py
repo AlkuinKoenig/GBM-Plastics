@@ -2,14 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+####Description
+#This is an example script on plotting boxmodel output.
 #################
 
+#below insert the relative path to the output file
 fpath = "../../../output/"
-#insert the output file name here
-fname = "OUTP_20220427_2018_INP_PARS_BASE_V2_20220322_1739.csv"
+#below give the ouput file name (including the ".csv")
+fname = "OUTP_20220428_2216_INP_PARS_BASE_V2_20220322_1739.csv"
 
 #################
-
+#reading file in, skipping metadata
 df_metadata = pd.read_csv(fpath + fname, header = None, error_bad_lines = False, warn_bad_lines=False)
 mout = pd.read_csv(fpath + fname, skiprows = len(df_metadata.index))#skip all metadata lines
 
@@ -105,7 +108,7 @@ plt.plot(mout["Year"],mout["f_incin"], "-",label = "f_incin")
 plt.plot(mout["Year"],mout["f_disc"], "-",label = "f_disc")
 #plt.axvline(x=2015,color="red")
 plt.xlabel("year")
-plt.ylabel("mass [tonnes]")
+plt.ylabel("fraction")
 plt.legend()
 plt.show()
 

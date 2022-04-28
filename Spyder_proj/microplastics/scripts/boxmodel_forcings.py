@@ -59,11 +59,11 @@ class boxmodel_forcings():
 
     
     def get_f_disc(self,time):  
-        #please note that in the box model, not the following fractions are used,
-        #but instead: f_disc = 1 - f_incin - f_rec
+        #please note that in the box model, the functions for f_disc are not actually used.,
+        #but instead: f_disc = 1 - f_incin - f_rec, to assure a sum of "1"
         f_disc = np.where(time < 1980, 1, 
-                          np.where(time <= 2050, -0.000000017315 * time ** 3 + 0.0000624932 * time ** 2 - 0.0553287 * time,
-                                   -0.000000017315 * 2050 ** 3 + 0.0000624932 * 2050 ** 2 - 0.0553287 * 2050)#fix at 2050
+                          np.where(time <= 2050, -6.50071E-05*(time-1980)**2 - 9.82137E-03*(time-1980) + 1.02517E+00,
+                                   -6.50071E-05*(2050-1980)**2 - 9.82137E-03*(2050-1980) + 1.02517E+00)#fix at 2050
                           )
         
         if (self.scenario_release[0] == "pulse"): 
@@ -71,8 +71,8 @@ class boxmodel_forcings():
            
         if (self.scenario_release[0] == "SCS"):
             f_disc = np.where(time < 2016, f_disc, # base case until 2016
-                np.where(time <= 2050, -0.013*time + 26.75, #SCS linear equation between 2016 and 2050
-                         -0.013*2050 + 26.75)# fix ratios after 2050 in the value at 2025
+                np.where(time <= 2050, -2.59438E-05*(time-1980)**2 - 1.19690E-02*(time-1980) + 1.04159E+00, #SCS linear equation between 2016 and 2050
+                         -2.59438E-05*(2050-1980)**2 - 1.19690E-02*(2050-1980) + 1.04159E+00)# fix ratios after 2050 in the value at 2025
                 )
             
         return (f_disc)
@@ -83,19 +83,20 @@ class boxmodel_forcings():
     def get_f_incin(self,time):
         #base case
         f_incin = np.where(time < 1980, 0,
-                           np.where(time <=2050, 0.000000010866 * time ** 3 - 0.000040095 * time ** 2 + 0.0367815 * time, #use this between 1980 and 2050
-                                    0.000000010866 * 2050 ** 3 - 0.000040095 * 2050 ** 2 + 0.0367815 * 2050) #after 2050 use value of 2050
-                           ) 
+                            np.where(time <=2050, 4.35199E-05*(time-1980)**2 + 4.53298E-03*(time-1980) - 4.62020E-03, #use this between 1980 and 2050
+                                    4.35199E-05*(2050-1980)**2 + 4.53298E-03*(2050-1980) - 4.62020E-03) #after 2050 use value of 2050
+                            ) 
                            
-        
+                           
         if (self.scenario_release[0] == "pulse"):
             f_incin = 0 #in the pulse scenario_release, all waste P is discarded
     
         if (self.scenario_release[0] == "SCS"):
-            f_incin = np.where(time < 2016, f_incin, # base case until 2016
-                np.where(time <= 2050, -0.000475692 * time**2 + 1.93297 * time - 1963.25, #SCS linear equation between 2016 and 2050
-                         -0.000475692 * 2050**2 + 1.93297 * 2050 - 1963.25)# fix ratios after 2050 in the value at 2025
-                )        
+            f_incin = np.where(time < 1980, 0, #0 until 1980
+                               np.where(time <=2050, -1.05019E-07*(time-1980)**4 + 7.11979E-06*(time-1980)**3 + 3.68095E-05*(time-1980)**2 + 1.09400E-03*(time-1980) + 1.51226E-02, #use this between 1980 and 2050
+                                        -1.05019E-07*(2050-1980)**4 + 7.11979E-06*(2050-1980)**3 + 3.68095E-05*(2050-1980)**2 + 1.09400E-03*(2050-1980) + 1.51226E-02) #after 2050 use value of 2050
+                               ) 
+              
     
         return (f_incin)
     
@@ -104,18 +105,19 @@ class boxmodel_forcings():
     def get_f_rec(self,time):
         #base case
         f_rec = np.where(time < 1989, 0,
-                         np.where(time <= 2050, 0.00712723 * time - 14.1653,
-                                  0.00712723 * 2050 - 14.1653)#fix after 2050
+                         np.where(time <= 2050, 7.12882E-03*(time-1980) - 5.33665E-02,
+                                  7.12882E-03*(2050-1980) - 5.33665E-02)#fix after 2050
                          )
         
         if (self.scenario_release[0] == "pulse"):
             r_rec = 0 #in the pulse scenario_release, all waste P is discarded
         
         if (self.scenario_release[0] == "SCS"):
-            f_rec = np.where(time < 2016, f_rec, # base case until 2016
-                np.where(time <= 2050, 0.000475692 * time** 2 - 1.91997*time + 1937.5, #SCS linear equation between 2025 and 2050
-                         0.000475692 * 2050**2 - 1.91997 * 2050 + 1937.5)# fix ratios after 2050 in the value at 2025
-                )    
+            f_rec = np.where(time < 1989, 0,
+                             np.where(time <= 2050, 7.59746E-06*(time-1980)**3 - 7.40007E-04*(time-1980)**2 + 2.69325E-02*(time-1980) - 2.00285E-01,
+                                      7.59746E-06*(2050-1980)**3 - 7.40007E-04*(2050-1980)**2 + 2.69325E-02*(2050-1980) - 2.00285E-01)#fix after 2050
+            )
+   
         
         return (f_rec)
     
@@ -155,9 +157,6 @@ class boxmodel_forcings():
     
 
 
-
+#Example: 
 #FRCS = boxmodel_forcings(("base",),("no_cleanup",))
 
-# print(FRCS.get_P_prod(2000))
-# # print(FRCS.get_f_incin(1981))
-# print(1 - FRCS.get_f_incin(1980) - FRCS.get_f_rec(1980) )
