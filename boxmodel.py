@@ -7,13 +7,13 @@ from datetime import datetime
 import json
 
 ##############################
-#Microplastics box model.
+#Microplastics box model. 27 Nov 2022. Authors: Jeroen Sonke & Alkuin Koenig (jeroen.sonke@get.omp.eu and Alkuin.Koenig@gmx.de)
 #NOTE that in the manuscript large microplastics and small micropalstics are termed LMP and SMP; in the model below they are still called MP and sMP
 ##############################
 #Instructions:
-#This is the main script (boxmodel_VX.py).To be able to run this, you need to have in the same folder
+#This is the main script (boxmodel.py).To be able to run this, you need to have in the same folder
 #the script "boxmodel_forcings.py", where forcings are defined.
-#you also need a *.json input file with mass transfer coefficients, k (for example created with the script "boxmodel_parameters_VX.py", where X is a version number)
+#you also need a *.json input file with mass transfer coefficients, k (for example created with the script "boxmodel_parameters.py")
 #The variable "input_relpath" below should point to the location of this input *.json
 #Note that the output file will be named automatically. It will be saved at the path "output_relpath" which should be given below.
 
@@ -28,7 +28,7 @@ input_relpath = "./"
 output_relpath = "./"
 
 #below indicate the time span for which the model should be run (t1 to t2, given in years)
-t_span = np.array([1950,2050])
+t_span = np.array([1950,2015])
 #below indicate how many output lines you want to have per year (for example 10 --> output every 0.1 years)
 lines_per_year = 10
 
@@ -100,7 +100,7 @@ def boxmodel_V1(t, y, PARS, FRCS):
     P_waste = FRCS.get_P_waste(t)
     f_rec = FRCS.get_f_rec(t)
     f_inc = FRCS.get_f_incin(t)
-    #f_disc = FRCS.get_f_disc(t) #note that we use f_disc = 1 - f_incin - f_rec below for convenience
+    #f_disc = FRCS.get_f_disc(t) #note that we use f_disc = 1 - f_incin - f_rec below for convenience (and to sum up the three fraction to 1.00)
     f_disc = 1 - f_rec - f_inc # As P_recycled + P_incinerated + P_discarded = 1
    
     #getting the cleanup dts
@@ -135,7 +135,7 @@ def boxmodel_V1(t, y, PARS, FRCS):
     
     dP_beach_dt = PARS["k_SurfOce_P_beach"] * P_SurfOce - PARS["k_beach_P_to_MP"] * P_beach
     dMP_beach_dt = PARS["k_SurfOce_MP_beach"] * MP_SurfOce + PARS["k_beach_P_to_MP"] * P_beach - PARS["k_beach_MP_to_sMP"] * MP_beach
-    dsMP_beach_dt = + PARS["k_beach_MP_to_sMP"] * MP_beach
+    dsMP_beach_dt = + PARS["k_beach_MP_to_sMP"] * MP_beach #SMP on beach is only produced by degradation of LMP on beach. No direct ocean to beach deposition of SMP is included in the model
     
     dP_ShelfSed_dt = PARS["k_SurfOce_P_ShelfSed"] * P_SurfOce * PARS["f_shelf"]
     dMP_ShelfSed_dt = PARS["k_SurfOce_MP_ShelfSed"] * MP_SurfOce * PARS["f_shelf"]

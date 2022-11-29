@@ -5,17 +5,17 @@ from datetime import datetime
 #NOTE that in the manuscript large microplastics and small micropalstics are termed LMP and SMP; in the model below they are still called MP and sMP
 #saving k values within a class because it's convenient
 class boxmodel_parameters:    
-    f_MP = 0.14  # Lau20: fraction of MP waste that is 'primary MP'
+    f_MP = 0.14  # Lau Winnie et al. 2020, Science: fraction of MP waste that is 'primary MP'
     f_shelf = 0.08
     f_ocean = 0.92
-    M_P_discard = 4900 * (1 - f_MP)  # Geyer17: Total discarded plastic pool of 4900 Tg multipled by (1-0.14) from Lau20
+    M_P_discard = 4900 * (1 - f_MP)  # Geyer et al. 2017, Science Advances: Total discarded plastic pool of 4900 Tg multipled by (1-0.14) from Lau20
     M_MP_discard = 4900 * f_MP  # Geyer17: Total discarded plastic pool of 4900 Tg multipled by (0.14) from Lau20; this represents primary discarded MP
     M_sMP_discard = 524 # unknown, but estimated by one single iteration, because needed to calculate k_Disc sMP to atm
-    M_P_SurfOcean = 0.23  # Eriksen et al. 2014
-    M_MP_SurfOcean = 0.036  # Eriksen et al. 2014
-    M_sMP_SurfOcean = 0.0028  # Poulain et al. 2018
+    M_P_SurfOcean = 0.23  # Eriksen et al. 2014, PLOS-One
+    M_MP_SurfOcean = 0.036  # Eriksen et al. 2014, PLOS-One
+    M_sMP_SurfOcean = 0.0028  # Poulain et al. 2018, ES&T
     M_MPsMP_DeepOcean = 82  # this study, based on observations
-    M_sMP_atmo = 0.0036  # Brahney et al. 2021
+    M_sMP_atmo = 0.0036  # Brahney et al. 2021, PNAS
     M_sMP_soil = 28  # this study, based on observations
     M_P_beach = 1.32  #  this study, based on observations
     M_MP_beach = 0.53  # this study, based on observations
@@ -24,7 +24,7 @@ class boxmodel_parameters:
     M_Incinerated = 800  # Geyer17 mass of all plastics in year 2015, incinerated since 1950
     M_recycled = 750  # Geyer17 mass of all plastics in year 2015, recycled since 1950
 
-    # only a few fluxes are observed and used to derive k values; I include the other fluxes in the model, to print them file later in the code
+    # only a few fluxes are observed and used to derive k values; The non-observed fluxes are computed in the model, to print them to file later in the code
     #F_Pinuse_to_MPdisc
     #F_Pinuse_to_Pdisc
     #F_Pinuse_to_CO2
@@ -36,12 +36,12 @@ class boxmodel_parameters:
     #F_sMP_river_from_disc
     #F_sMP_river_from_soil
     #F_river_tot = 0.0064  # base case value 0.0064 from Weis et al. 2021
-    F_river_tot = 8.5  #approximate river total plastics flux in Tg/y based on Jambeck et al. 2015 Science
+    F_river_tot = 8.5  #approximate river total plastics flux in Tg/y based on Jambeck et al. 2015 Science (midpoint value between 4 and 13)
     #F_Ocean_P_to_MP
     #F_Ocean
     #MP_to_sMP
-    F_sMP_oce_to_atm = 8.6  # Brahney et al., 2021
-    F_sMP_atm_to_oce = 7.6  # Brahney et al., 2021
+    F_sMP_oce_to_atm = 8.6  # Brahney et al., 2021, PNAS
+    F_sMP_atm_to_oce = 7.6  # this study, estimated as total deposition from Brahney et al., 2021, PNAS minus deposition to land
     #F_P_beaching
     #F_MP_beaching
     #F_beach_P_to_MP
@@ -54,24 +54,24 @@ class boxmodel_parameters:
     F_sMP_DiscInuse_to_atm = 0.183  # Brahney et al. 2021 sum of road emissions (from in use reservoir) + population + agricultural dust (from discarded sMP reservoir)
 
     # all k have units of 1/y; since F=kM, often k values are calculated as k=F/M
-    LB19 = 0.03
-    k_SurfOce_P_to_MP = LB19  # From Lebreton et al. 2019
+    LB19 = 0.03  # Plastics degradation rate in 'per year' untis From Lebreton et al. 2019, NCOMMS. Below this rate is applied to P to LMP degradation adn LMP to SMP degradation in all environments
+    k_SurfOce_P_to_MP = LB19
     k_SurfOce_MP_to_sMP = LB19
     k_beach_P_to_MP = LB19
     k_beach_MP_to_sMP = LB19
     
     k_DeepOce_MP_to_sMP = LB19
-    CF1 = 1  # Correction Factor to fit a lower terrestrial fragmentation rate; not used adn set to 1
+    CF1 = 1  # Correction Factor to fit a lower terrestrial fragmentation rate; not currently used and therefore set to 1
     k_Disc_P_to_MP = LB19 / CF1
     k_Disc_MP_to_sMP = LB19 / CF1
 
-    k_P_surf_to_deep_oce = 0 #not included in model because we assume open ocean P to be buoyant, but approx 1367 y-1, based on Long et al. 2015: sMP sinking rate of 375 m/d=136700 m/y and a mixed layer depth of 100m: 136700/100=1367 1/y
-    k_MP_surf_to_deep_oce = 196  # based on Long et al. 2015: sMP sinking rate of 53.8 m/d=19637 m/y and a mixed layer depth of 100m: 19637/100=196 1/y
-    k_sMP_surf_to_deep_oce = 32.5  # based on Long et al. 2015: sMP sinking rate of 8.91 m/d=3251 m/y and a mixed layer depth of 100m
+    k_P_surf_to_deep_oce = 0 #not included in model because we assume open ocean P to be buoyant, but approx 1367 y-1, based on Long et al. 2015, ES&T: sMP sinking rate of 375 m/d=136700 m/y and a mixed layer depth of 100m: 136700/100=1367 y-1
+    k_MP_surf_to_deep_oce = 196  # based on Long et al. 2015, ES&T: sMP sinking rate of 53.8 m/d=19637 m/y and a mixed layer depth of 100m: 19637/100=196 1/y
+    k_sMP_surf_to_deep_oce = 32.5  # based on Long et al. 2015, ES&T: sMP sinking rate of 8.91 m/d=3251 m/y and a mixed layer depth of 100m
     f_P_river = 0.5 # based on Weis et al. 2021 Science SI
     f_MPsMP_river = 1 - f_P_river
-    k_P_Disc_to_river = F_river_tot * f_P_river / M_P_discard  # factor 2 to account for 50% river plastics = P, and 50% = MP. sMP unknown
-    k_MP_Disc_to_river = F_river_tot * f_MPsMP_river / M_MP_discard  # factor 2 to account for 50% river plastics = P, and 50% = MP. sMP unknown
+    k_P_Disc_to_river = F_river_tot * f_P_river / M_P_discard  #
+    k_MP_Disc_to_river = F_river_tot * f_MPsMP_river / M_MP_discard  #
     k_sMP_Disc_to_river = k_MP_Disc_to_river  # assumed equal to MP behavior
 
     k_Disc_sMP_to_atm = F_sMP_DiscInuse_to_atm / M_sMP_discard
